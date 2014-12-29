@@ -66,6 +66,7 @@ var readability = {
         prevLink:              /(prev|earl|old|new|<|«)/i
     },
 
+    // TODO: Fix this doc (the return part is wrong I think)
     /**
      * Runs readability.
      *
