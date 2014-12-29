@@ -98,6 +98,8 @@ var readability = {
 
         var articleTitle   = readability.getArticleTitle(doc);
         var articleContent = readability.grabArticle(doc, doc);
+        // Add article content to the doc so that appendNextPage can access it.
+        doc.articleContent = articleContent;
 
         if(!articleContent) {
             nextPageLink = null;
@@ -124,8 +126,8 @@ var readability = {
             **/
             // TODO: Make this instant, also look into appendNextPage
             window.setTimeout(function() {
-                readability.appendNextPage(nextPageLink);
-            }, 500);
+                readability.appendNextPage(nextPageLink, doc);
+            }, 100);
         }
 
 
@@ -135,7 +137,7 @@ var readability = {
         //       I think the only solution will be to make run() and async function.
         return {
             title: readability.getInnerText(articleTitle),
-            content: readability.getInnerText(articleContent)
+            content: readability.getInnerText(doc.articleContent)
         };
     },
 
@@ -1199,7 +1201,7 @@ var readability = {
         articlePage.className = 'page';
         articlePage.innerHTML = '<p class="page-separator" title="Page ' + readability.curPageNum + '">&sect;</p>';
 
-        doc.getElementById("readability-content").appendChild(articlePage);
+        doc.articleContent.appendChild(articlePage);
 
         if(readability.curPageNum > readability.maxPages) {
             var nextPageMarkup = "<div style='text-align: center'><a href='" + nextPageLink + "'>View Next Page</a></div>";
@@ -1292,7 +1294,7 @@ var readability = {
                     );
 
                     if(nextPageLink) {
-                        readability.appendNextPage(nextPageLink);
+                        readability.appendNextPage(nextPageLink, doc);
                     }
                 }
             });
