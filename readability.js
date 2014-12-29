@@ -83,7 +83,7 @@ var readability = {
 
         var doc = document.cloneNode(true);
 
-        // TODO: This may be unneeded?
+        // TODO: This may be unnecessary?
         readability.removeScripts(doc);
 
         if(doc.body && !readability.bodyCache) {
@@ -115,7 +115,7 @@ var readability = {
         if((window.location.protocol + "//" + window.location.host + "/") === window.location.href)
         {
             articleContent.style.display = "none";
-            // TODO: Raise a warning here?
+            // TODO: Raise a warning here? Or maybe just remove this completely.
         }
         readability.postProcessContent(articleContent, doc);
 
@@ -131,7 +131,7 @@ var readability = {
         }
 
 
-        // TODO: innerText might not be the wisest way to convert the DOM nodes into strings.
+        // TODO: getInnerText might not be the wisest way to convert the DOM nodes into strings.
         //       It might make more sense to modify the grabArticle function instead.
         // TODO: Pretty sure this will only show the first page until we fix the thing above.
         //       I think the only solution will be to make run() and async function.
@@ -397,8 +397,6 @@ var readability = {
             footnotesWrapper.style.display = 'block';
         }
     },
-
-    // TODO: Search for all usages of window and determine if they modify the page or not
 
     /**
      * Prepare the article node for display. Clean out any inline styles,
