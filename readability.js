@@ -1280,6 +1280,9 @@ var readability = {
 
                     readability.removeScripts(content);
 
+                    //TODO: I think my strategy of not modifying the doc actually messes this up
+                    //      I think it is safe to revert the changes regarding not modifying doc, because doc
+                    //      is a copy anyways.
                     thisPage.innerHTML = thisPage.innerHTML + content.innerHTML;
 
                     /**
