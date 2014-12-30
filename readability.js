@@ -97,19 +97,28 @@ var readability = {
 
         readability.prepDocument(doc);
 
+        var innerDiv       = doc.createElement("DIV");
         var articleTitle   = readability.getArticleTitle(doc);
         var articleContent = readability.grabArticle(doc, doc);
-        // Add article content to the doc so that appendNextPage can access it.
-        doc.articleContent = articleContent;
-        //TODO: We might be fucking things up here by not actually adding articleContent and title to the doc. I think perhaps appendNextPage assumes it is there.
-
         if(!articleContent) {
+            articleContent    = doc.createElement("DIV");
+            articleContent.id = "readability-content";
             nextPageLink = null;
         }
 
         if(typeof(readConvertLinksToFootnotes) !== 'undefined' && readConvertLinksToFootnotes === true) {
             readability.convertLinksToFootnotes = true;
         }
+
+        /* Glue the structure of our document together. */
+        innerDiv.appendChild( articleTitle   );
+        innerDiv.appendChild( articleContent );
+
+        /* Clear the old HTML, insert the new content. */
+        doc.body.innerHTML = "";
+        doc.body.insertBefore(innerDiv, doc.body.firstChild);
+        doc.body.removeAttribute('style');
+
 
         /**
          * If someone tries to use Readability on a site's root page, give them a warning about usage.
@@ -121,19 +130,19 @@ var readability = {
         }
         readability.postProcessContent(articleContent, doc);
 
-        // TODO: getInnerText might not be the wisest way to convert the DOM nodes into strings.
-        //       It might make more sense to modify the grabArticle function instead.
-        var ret = {
-            title: readability.getInnerText(articleTitle),
-            content: readability.getInnerText(doc.articleContent)
+        var returnValue = function(theDoc) {
+            return {
+                title: readability.getInnerText(articleTitle),
+                content: readability.getInnerText(theDoc.getElementById("readability-content"))
+            }
         };
 
         if (nextPageLink) {
             readability.appendNextPage(nextPageLink, doc, function(){
-                callback(ret);
+                callback(returnValue(doc));
             });
         } else {
-            callback(ret);
+            callback(returnValue(doc));
         }
     },
 
@@ -1196,7 +1205,7 @@ var readability = {
         articlePage.className = 'page';
         articlePage.innerHTML = '<p class="page-separator" title="Page ' + readability.curPageNum + '">&sect;</p>';
 
-        doc.articleContent.appendChild(articlePage);
+        doc.getElementById("readability-content").appendChild(articlePage);
 
         if(readability.curPageNum > readability.maxPages) {
             var nextPageMarkup = "<div style='text-align: center'><a href='" + nextPageLink + "'>View Next Page</a></div>";
