@@ -75,9 +75,10 @@ var readability = {
      *  4. Replace the current DOM tree with the new one.
      *  5. Read peacefully.
      *
-     * @return {}
+     * @param callback
+     * @return void
      **/
-    run: function() {
+    run: function(callback) {
 
         var doc = document.cloneNode(true);
 
@@ -100,6 +101,7 @@ var readability = {
         var articleContent = readability.grabArticle(doc, doc);
         // Add article content to the doc so that appendNextPage can access it.
         doc.articleContent = articleContent;
+        //TODO: We might be fucking things up here by not actually adding articleContent and title to the doc. I think perhaps appendNextPage assumes it is there.
 
         if(!articleContent) {
             nextPageLink = null;
@@ -119,26 +121,20 @@ var readability = {
         }
         readability.postProcessContent(articleContent, doc);
 
-        if (nextPageLink) {
-            /**
-             * Append any additional pages after a small timeout so that people
-             * can start reading without having to wait for this to finish processing.
-            **/
-            // TODO: Make this instant, also look into appendNextPage
-            window.setTimeout(function() {
-                readability.appendNextPage(nextPageLink, doc);
-            }, 100);
-        }
-
-
         // TODO: getInnerText might not be the wisest way to convert the DOM nodes into strings.
         //       It might make more sense to modify the grabArticle function instead.
-        // TODO: Pretty sure this will only show the first page until we fix the thing above.
-        //       I think the only solution will be to make run() and async function.
-        return {
+        var ret = {
             title: readability.getInnerText(articleTitle),
             content: readability.getInnerText(doc.articleContent)
         };
+
+        if (nextPageLink) {
+            readability.appendNextPage(nextPageLink, doc, function(){
+                callback(ret);
+            });
+        } else {
+            callback(ret);
+        }
     },
 
     /**
@@ -1157,7 +1153,6 @@ var readability = {
 
     ajax: function (url, options) {
         var request = readability.xhr();
-
         function respondToReadyState(readyState) {
             if (request.readyState === 4) {
                 if (readability.successfulRequest(request)) {
@@ -1193,7 +1188,7 @@ var readability = {
 
     // TODO: Figure out what to do about the fact that readability actually builds the page asynchronously
 
-    appendNextPage: function (nextPageLink, doc) {
+    appendNextPage: function (nextPageLink, doc, callback) {
         readability.curPageNum+=1;
 
         var articlePage       = doc.createElement("DIV");
@@ -1207,6 +1202,7 @@ var readability = {
             var nextPageMarkup = "<div style='text-align: center'><a href='" + nextPageLink + "'>View Next Page</a></div>";
 
             articlePage.innerHTML = articlePage.innerHTML + nextPageMarkup;
+            callback();
             return;
         }
 
@@ -1224,6 +1220,7 @@ var readability = {
                         if(eTag in readability.pageETags) {
                             dbg("Exact duplicate page found via ETag. Aborting.");
                             articlePage.style.display = 'none';
+                            callback();
                             return;
                         } else {
                             readability.pageETags[eTag] = 1;
@@ -1258,6 +1255,7 @@ var readability = {
 
                     if(!content) {
                         dbg("No content found in page to append. Aborting.");
+                        callback();
                         return;
                     }
 
@@ -1274,6 +1272,7 @@ var readability = {
                                 dbg('Duplicate of page ' + i + ' - skipping.');
                                 articlePage.style.display = 'none';
                                 readability.parsedPages[pageUrl] = true;
+                                callback();
                                 return;
                             }
                         }
@@ -1294,8 +1293,14 @@ var readability = {
                     );
 
                     if(nextPageLink) {
-                        readability.appendNextPage(nextPageLink, doc);
+                        readability.appendNextPage(nextPageLink, doc, callback);
+                    } else {
+                        callback();
                     }
+                },
+                error: function(r){
+                    callback();
+                    return;
                 }
             });
         }(nextPageLink, articlePage));
