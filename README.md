@@ -10,9 +10,9 @@ The Readability bookmarklet extracts article text from the current webpage, but 
 Usage
 -----
 ```
-readability.run(function(article){
+readability.extract(function(article){
   console.log(article.title);   // logs the title of the article
   console.log(article.content); // logs the body of the article
 });
 ```
-`run` is an asynchronous function. If the article is paginated, `run` will retreive the subsequent pages and concatenate them. `run`'s only argument is a callback which will be executed when the entire article has been retrieved and processed.
+`extract` is an asynchronous function. If the article is paginated, `extract` will retreive the subsequent pages and concatenate them. `extract`'s only argument is a callback which will be executed when the entire article has been retrieved and processed.
